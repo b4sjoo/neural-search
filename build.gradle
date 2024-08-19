@@ -17,6 +17,7 @@ apply plugin: 'opensearch.pluginzip'
 apply plugin: 'jacoco'
 apply plugin: "com.diffplug.spotless"
 apply plugin: 'io.freefair.lombok'
+apply plugin: "io.spring.dependency-management"
 
 def pluginName = 'opensearch-neural-search'
 def pluginDescription = 'A plugin that adds dense neural retrieval into the OpenSearch ecosytem'
@@ -111,6 +112,7 @@ buildscript {
         classpath "${opensearch_group}.gradle:build-tools:${opensearch_version}"
         classpath "com.diffplug.spotless:spotless-plugin-gradle:5.6.1"
         classpath "io.freefair.gradle:lombok-plugin:8.0.1"
+        classpath "io.spring.gradle:dependency-management-plugin:1.1.6"
     }
 }
 
@@ -144,6 +146,11 @@ dependencies {
     zipArchive group: 'org.opensearch.plugin', name:'opensearch-ml-plugin', version: "${opensearch_build}"
     compileOnly fileTree(dir: knnJarDirectory, include: '*.jar')
     api group: 'org.opensearch', name:'opensearch-ml-client', version: "${opensearch_build}"
+    api group: 'com.amazonaws', name: 'aws-java-sdk-core', version: "1.12.769"
+    api group: 'com.amazonaws', name: 'aws-java-sdk-sts', version: "1.12.769"
+    api "com.fasterxml.jackson.core:jackson-core:2.15.2"
+    api "com.fasterxml.jackson.core:jackson-databind:2.15.2"
+    api "com.fasterxml.jackson.core:jackson-annotations:2.15.2"
     implementation group: 'org.apache.commons', name: 'commons-lang3', version: '3.10'
     // ml-common excluded reflection for runtime so we need to add it by ourselves.
     // https://github.com/opensearch-project/ml-commons/commit/464bfe34c66d7a729a00dd457f03587ea4e504d9
@@ -270,15 +277,41 @@ task integTestRemote(type: RestIntegTestTask) {
     systemProperty 'cluster.number_of_nodes', "${_numNodes}"
 
     systemProperty 'tests.security.manager', 'false'
+    //systemProperty "aws.accessKeyId", System.getProperty("aws.accessKeyId")
+    //systemProperty "aws.secretAccessKey", System.getProperty("aws.secretAccessKey")
+    //systemProperty 'aoss', 'false'
 
     // Run tests with remote cluster only if rest case is defined
     if (System.getProperty("tests.rest.cluster") != null) {
         filter {
-            includeTestsMatching "org.opensearch.neuralsearch.*IT"
+            includeTestsMatching "org.opensearch.neuralsearch.*CloudNativeIT"
         }
     }
 }
 
+// AOSS Integration Tests
+task integTestAOSS(type: RestIntegTestTask) {
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+
+    systemProperty "https", System.getProperty("https")
+    // systemProperty "user", System.getProperty("user")
+    // systemProperty "password", System.getProperty("password")
+    systemProperty "aws.accessKeyId", System.getProperty("aws.accessKeyId")
+    systemProperty "aws.secretAccessKey", System.getProperty("aws.secretAccessKey")
+
+    systemProperty 'cluster.number_of_nodes', "${_numNodes}"
+
+    systemProperty 'tests.security.manager', 'false'
+    systemProperty 'aoss', 'true'
+
+    // Run tests with remote cluster only if rest case is defined
+    if (System.getProperty("tests.rest.cluster") != null) {
+        filter {
+            includeTestsMatching "org.opensearch.neuralsearch.*CloudNativeIT"
+        }
+    }
+}
 
 run {
     useCluster testClusters.integTest
