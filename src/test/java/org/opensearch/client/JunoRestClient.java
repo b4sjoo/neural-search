@@ -76,7 +76,7 @@ public class JunoRestClient extends RestClient implements Closeable {
     private static final String SERVICE_NAME = "aoss";
     private static final String REGION_NAME = "us-west-2";
     private static final String ACCOUNT_ID = "058264223758";
-    private static final String COLLECTION_ID = "jzms9dhorjfvix6938w5";
+    private static final String COLLECTION_ID = "iqgbxpohpaemd8jwyui2";
     private static final Duration TIMEOUT = Duration.ofMinutes(1);
 
     private static final String INDEX_NAME_PATTERN = "(\\w|\\.|-|\\+|_|\\d)+";
@@ -85,9 +85,18 @@ public class JunoRestClient extends RestClient implements Closeable {
     private static final Map<ApiId, ApiHandler> API_HANDLERS = Map.ofEntries(
         // not actually supported, opensearch test framework is calling this so for now we will bypass
         Map.entry(new ApiId("GET", Pattern.compile("^.*_nodes/plugins.*$")), JunoRestClient::callLocal),
-        Map.entry(new ApiId("POST", Pattern.compile("^.*_search.*$")), JunoRestClient::callLocal),
         Map.entry(new ApiId("GET", Pattern.compile("^.*_search.*$")), JunoRestClient::callLocal),
-        Map.entry(new ApiId("GET", Pattern.compile("^/_cat/indices.*$")), JunoRestClient::callRemote),
+        Map.entry(new ApiId("GET", Pattern.compile("^/_snapshot/_all$")), JunoRestClient::callLocal),
+        Map.entry(new ApiId("DELETE", Pattern.compile("^_data_stream/.*$")), JunoRestClient::callLocal),
+        Map.entry(new ApiId("DELETE", Pattern.compile("^_template/.*$")), JunoRestClient::callLocal),
+        Map.entry(new ApiId("DELETE", Pattern.compile("^_index_template/.*$")), JunoRestClient::callLocal),
+        Map.entry(new ApiId("DELETE", Pattern.compile("^_component_template/.*$")), JunoRestClient::callLocal),
+        Map.entry(new ApiId("GET", Pattern.compile("^/_cluster/.*$")), JunoRestClient::callLocal),
+        Map.entry(new ApiId("GET", Pattern.compile("^/_tasks$")), JunoRestClient::callLocal),
+        Map.entry(new ApiId("GET", Pattern.compile("^/_plugins/_ml/.*$")), JunoRestClient::callRemote),
+        Map.entry(new ApiId("POST", Pattern.compile("^/_plugins/_ml/.*$")), JunoRestClient::callRemote),
+        Map.entry(new ApiId("PUT", Pattern.compile("^/_search/pipeline/.*$")), JunoRestClient::callRemote),
+        Map.entry(new ApiId("DELETE", Pattern.compile("^/_search/pipeline/.*$")), JunoRestClient::callRemote),
         Map.entry(new ApiId("GET", Pattern.compile("^/_cat/indices.*$")), JunoRestClient::callRemote),
         Map.entry(new ApiId("HEAD", Pattern.compile("^/" + INDEX_NAME_PATTERN + "$")), JunoRestClient::callRemote),
         Map.entry(new ApiId("PUT", Pattern.compile("^/" + INDEX_NAME_PATTERN + "$")), JunoRestClient::callRemote),
@@ -95,7 +104,7 @@ public class JunoRestClient extends RestClient implements Closeable {
             new ApiId("PUT", Pattern.compile("^/" + INDEX_NAME_PATTERN + "/_alias/" + INDEX_NAME_PATTERN + "$")),
             JunoRestClient::callRemote
         ),
-        // Map.entry(new ApiId("DELETE", Pattern.compile("^/" + INDEX_NAME_PATTERN + "$")), JunoRestClient::callRemote),
+        Map.entry(new ApiId("DELETE", Pattern.compile("^/" + INDEX_NAME_PATTERN + "$")), JunoRestClient::callRemote),
         Map.entry(new ApiId("POST", Pattern.compile("^/" + INDEX_NAME_PATTERN + "/_bulk.*$")), JunoRestClient::callRemote),
         Map.entry(new ApiId("PUT", Pattern.compile("^/" + INDEX_NAME_PATTERN + "/_settings.*$")), JunoRestClient::callRemote),
         Map.entry(
@@ -107,7 +116,7 @@ public class JunoRestClient extends RestClient implements Closeable {
             JunoRestClient::callRemote
         ),
         // not actually supported, letting it fail at the gateway
-        Map.entry(new ApiId("PUT", Pattern.compile("^/_cluster/settings$")), JunoRestClient::callRemote)
+        Map.entry(new ApiId("PUT", Pattern.compile("^_cluster/settings$")), JunoRestClient::noop)
     // Map.entry(new ApiId("PUT", Pattern.compile("^/_cluster/settings$")), JunoRestClient::noop)
     );
 
@@ -238,7 +247,7 @@ public class JunoRestClient extends RestClient implements Closeable {
                 (HttpRequestInterceptor) (httpRequest, httpContext) -> {
                     String requestId = UUID.randomUUID().toString();
                     httpRequest.setHeader("X-Amzn-Aoss-Account-Id", "058264223758");
-                    httpRequest.setHeader("X-Amzn-Aoss-Collection-Id", "jzms9dhorjfvix6938w5");
+                    httpRequest.setHeader("X-Amzn-Aoss-Collection-Id", "iqgbxpohpaemd8jwyui2");
                     httpRequest.setHeader("x-request-id", requestId);
 
                     System.out.println(httpRequest);

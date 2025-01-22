@@ -53,26 +53,6 @@ public class HybridQueryIT extends BaseNeuralSearchIT {
     private final static String RELATION_EQUAL_TO = "eq";
     private static final String SEARCH_PIPELINE = "phase-results-pipeline";
 
-    @Before
-    public void setUp() throws Exception {
-        super.setUp();
-        updateClusterSettings();
-        prepareModel();
-        createSearchPipelineWithResultsPostProcessor(SEARCH_PIPELINE);
-    }
-
-    @After
-    @SneakyThrows
-    public void tearDown() {
-        super.tearDown();
-        deleteSearchPipeline(SEARCH_PIPELINE);
-        /* this is required to minimize chance of model not being deployed due to open memory CB,
-         * this happens in case we leave model from previous test case. We use new model for every test, and old model
-         * can be undeployed and deleted to free resources after each test case execution.
-         */
-        findDeployedModels().forEach(this::deleteModel);
-    }
-
     @Override
     public boolean isUpdateClusterSettings() {
         return false;
@@ -157,6 +137,7 @@ public class HybridQueryIT extends BaseNeuralSearchIT {
         assertEquals(3, total.get("value"));
         assertNotNull(total.get("relation"));
         assertEquals(RELATION_EQUAL_TO, total.get("relation"));
+        deleteSearchPipeline(SEARCH_PIPELINE);
     }
 
     @SneakyThrows
