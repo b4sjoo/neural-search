@@ -20,7 +20,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -46,8 +45,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.core.LoggerContext;
 import org.apache.logging.log4j.core.config.Configuration;
 import org.apache.logging.log4j.core.config.LoggerConfig;
-
 import org.opensearch.interceptors.AWSRequestSigningApacheInterceptor;
+
 import com.amazonaws.auth.AWS4UnsignedPayloadSigner;
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
@@ -224,35 +223,23 @@ public class JunoRestClient extends RestClient implements Closeable {
         return patterns.stream().map(p -> p.matcher(str)).anyMatch(Matcher::matches);
     }
 
-
     private RestClient buildRemoteClient() {
-        return RestClient.builder(HttpHost.create(COLLECTION_ENDPOINT))
-                .setHttpClientConfigCallback(config -> {
-                    configureSigV4Signing(config, new DefaultAWSCredentialsProviderChain());
-                    return config;
-                })
-                .build();
+        return RestClient.builder(HttpHost.create(COLLECTION_ENDPOINT)).setHttpClientConfigCallback(config -> {
+            configureSigV4Signing(config, new DefaultAWSCredentialsProviderChain());
+            return config;
+        }).build();
     }
 
     private void configureSigV4Signing(HttpAsyncClientBuilder builder, AWSCredentialsProvider awsCredentialsProvider) {
         AWS4UnsignedPayloadSigner signer = new AWS4UnsignedPayloadSigner();
         signer.setServiceName("aoss");
         signer.setRegionName(REGION_NAME);
-        HttpRequestInterceptor interceptor = new AWSRequestSigningApacheInterceptor(signer.getServiceName(), signer, awsCredentialsProvider);
-        builder.addInterceptorLast(interceptor);
-    }
-
-    public static void configureHttpRequestHeaders(HttpAsyncClientBuilder httpAsyncClientBuilder) {
-        httpAsyncClientBuilder.addInterceptorLast(
-                (HttpRequestInterceptor) (httpRequest, httpContext) -> {
-                    String requestId = UUID.randomUUID().toString();
-                    httpRequest.setHeader("X-Amzn-Aoss-Account-Id", "058264223758");
-                    httpRequest.setHeader("X-Amzn-Aoss-Collection-Id", "iqgbxpohpaemd8jwyui2");
-                    httpRequest.setHeader("x-request-id", requestId);
-
-                    System.out.println(httpRequest);
-                }
+        HttpRequestInterceptor interceptor = new AWSRequestSigningApacheInterceptor(
+            signer.getServiceName(),
+            signer,
+            awsCredentialsProvider
         );
+        builder.addInterceptorLast(interceptor);
     }
 
     private static Response callLocal(JunoRestClient client, Request request) {

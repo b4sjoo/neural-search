@@ -19,8 +19,6 @@ import java.util.stream.IntStream;
 
 import lombok.SneakyThrows;
 
-import org.junit.After;
-import org.junit.Before;
 import org.opensearch.index.query.BoolQueryBuilder;
 import org.opensearch.index.query.QueryBuilders;
 import org.opensearch.index.query.TermQueryBuilder;

@@ -6,73 +6,6 @@
 package org.opensearch.neuralsearch;
 
 import java.io.IOException;
-import java.net.URISyntaxException;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
-import java.util.function.Predicate;
-import java.util.stream.Collectors;
-
-import com.google.common.collect.ImmutableList;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.SneakyThrows;
-import lombok.extern.log4j.Log4j2;
-
-import org.apache.commons.lang3.StringUtils;
-import org.apache.http.Header;
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpHeaders;
-import org.apache.http.HttpHost;
-import org.apache.http.HttpRequestInterceptor;
-import org.apache.http.auth.AuthScope;
-import org.apache.http.auth.UsernamePasswordCredentials;
-import org.apache.http.client.CredentialsProvider;
-import org.apache.http.conn.ssl.NoopHostnameVerifier;
-import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.BasicCredentialsProvider;
-import org.apache.http.message.BasicHeader;
-import org.apache.http.ssl.SSLContextBuilder;
-import org.apache.http.util.EntityUtils;
-import org.junit.After;
-import org.junit.Before;
-import org.opensearch.client.JunoRestClient;
-import org.opensearch.client.JunoRestClientBuilder;
-import org.opensearch.client.Request;
-import org.opensearch.client.RequestOptions;
-import org.opensearch.client.Response;
-import org.opensearch.client.RestClient;
-import org.opensearch.client.RestClientBuilder;
-import org.opensearch.client.WarningsHandler;
-import org.opensearch.cluster.service.ClusterService;
-import org.opensearch.common.io.PathUtils;
-import org.opensearch.common.settings.Settings;
-import org.opensearch.common.unit.TimeValue;
-import org.opensearch.common.util.concurrent.ThreadContext;
-import org.opensearch.common.xcontent.XContentFactory;
-import org.opensearch.common.xcontent.XContentHelper;
-import org.opensearch.common.xcontent.XContentType;
-import org.opensearch.common.xcontent.json.JsonXContent;
-import org.opensearch.core.rest.RestStatus;
-import org.opensearch.core.xcontent.DeprecationHandler;
-import org.opensearch.core.xcontent.NamedXContentRegistry;
-import org.opensearch.core.xcontent.ToXContent;
-import org.opensearch.core.xcontent.XContentBuilder;
-import org.opensearch.core.xcontent.XContentParser;
-import org.opensearch.index.query.QueryBuilder;
-import org.opensearch.knn.index.SpaceType;
-import org.opensearch.neuralsearch.common.BaseNeuralSearchIT;
-import org.opensearch.neuralsearch.util.NeuralSearchClusterUtil;
-import org.opensearch.test.ClusterServiceUtils;
-import org.opensearch.test.rest.OpenSearchRestTestCase;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -81,16 +14,42 @@ import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
-import org.apache.http.nio.conn.ssl.SSLIOSessionStrategy;
-import org.apache.http.ssl.SSLContexts;
-import org.opensearch.threadpool.TestThreadPool;
-import org.opensearch.threadpool.ThreadPool;
-
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 import javax.net.ssl.SSLContext;
 
-import static org.apache.http.entity.ContentType.APPLICATION_JSON;
-import static org.opensearch.neuralsearch.common.VectorUtil.vectorAsListToArray;
+import lombok.extern.log4j.Log4j2;
+
+import org.apache.http.Header;
+import org.apache.http.HttpHost;
+import org.apache.http.auth.AuthScope;
+import org.apache.http.auth.UsernamePasswordCredentials;
+import org.apache.http.client.CredentialsProvider;
+import org.apache.http.conn.ssl.NoopHostnameVerifier;
+import org.apache.http.impl.client.BasicCredentialsProvider;
+import org.apache.http.message.BasicHeader;
+import org.apache.http.nio.conn.ssl.SSLIOSessionStrategy;
+import org.apache.http.ssl.SSLContextBuilder;
+import org.apache.http.ssl.SSLContexts;
+import org.junit.After;
+import org.opensearch.client.JunoRestClient;
+import org.opensearch.client.JunoRestClientBuilder;
+import org.opensearch.client.Request;
+import org.opensearch.client.Response;
+import org.opensearch.client.RestClient;
+import org.opensearch.common.io.PathUtils;
+import org.opensearch.common.settings.Settings;
+import org.opensearch.common.unit.TimeValue;
+import org.opensearch.common.util.concurrent.ThreadContext;
+import org.opensearch.common.xcontent.json.JsonXContent;
+import org.opensearch.core.xcontent.DeprecationHandler;
+import org.opensearch.core.xcontent.NamedXContentRegistry;
+import org.opensearch.core.xcontent.XContentParser;
+import org.opensearch.test.rest.OpenSearchRestTestCase;
 
 /**
  * Base class for running the integration tests on a secure cluster. The plugin IT test should either extend this
@@ -105,12 +64,6 @@ public abstract class OpenSearchSecureRestTestCase extends OpenSearchRestTestCas
     private static final String SYS_PROPERTY_KEY_CLUSTER_ENDPOINT = "tests.rest.cluster";
     private static final String SYS_PROPERTY_KEY_USER = "user";
     private static final String SYS_PROPERTY_KEY_PASSWORD = "password";
-    private static final String SYS_PROPERTY_AWS_ACCESS_KEY_ID = "aws.accessKeyId";
-    private static final String SYS_PROPERTY_AWS_SECRET_ACCESS_KEY = "aws.secretAccessKey";
-    private static final String SYS_PROPERTY_AOSS = "aoss";
-    private static final String SERVICE_NAME = "aoss";
-    private static final String ACCOUNT_ID = "058264223758";
-    private static final String COLLECTION_ID = "iqgbxpohpaemd8jwyui2";
     private static final String DEFAULT_SOCKET_TIMEOUT = "60s";
     private static final String INTERNAL_INDICES_PREFIX = ".";
     private static String protocol;
@@ -184,7 +137,7 @@ public abstract class OpenSearchSecureRestTestCase extends OpenSearchRestTestCas
         }
     }
 
-    protected static void openSearchRestTestCaseConfigureClient(JunoRestClientBuilder builder, Settings settings) throws IOException {
+    protected static void configureClient(JunoRestClientBuilder builder, Settings settings) throws IOException {
         String keystorePath = settings.get(TRUSTSTORE_PATH);
         if (keystorePath != null) {
             final String keystorePass = settings.get(TRUSTSTORE_PASSWORD);
@@ -203,9 +156,7 @@ public abstract class OpenSearchSecureRestTestCase extends OpenSearchRestTestCas
                 }
                 SSLContext sslcontext = SSLContexts.custom().loadTrustMaterial(keyStore, null).build();
                 SSLIOSessionStrategy sessionStrategy = new SSLIOSessionStrategy(sslcontext);
-                builder.setHttpClientConfigCallback(httpClientBuilder -> {
-                    return httpClientBuilder.setSSLStrategy(sessionStrategy);
-                });
+                builder.setHttpClientConfigCallback(httpClientBuilder -> { return httpClientBuilder.setSSLStrategy(sessionStrategy); });
             } catch (KeyStoreException | NoSuchAlgorithmException | KeyManagementException | CertificateException e) {
                 throw new RuntimeException("Error setting up ssl", e);
             }
@@ -219,8 +170,8 @@ public abstract class OpenSearchSecureRestTestCase extends OpenSearchRestTestCas
         builder.setDefaultHeaders(defaultHeaders);
         final String socketTimeoutString = settings.get(CLIENT_SOCKET_TIMEOUT);
         final TimeValue socketTimeout = TimeValue.parseTimeValue(
-                socketTimeoutString == null ? "60s" : socketTimeoutString,
-                CLIENT_SOCKET_TIMEOUT
+            socketTimeoutString == null ? "60s" : socketTimeoutString,
+            CLIENT_SOCKET_TIMEOUT
         );
         builder.setRequestConfigCallback(conf -> conf.setSocketTimeout(Math.toIntExact(socketTimeout.getMillis())));
         if (settings.hasValue(CLIENT_PATH_PREFIX)) {
@@ -228,21 +179,6 @@ public abstract class OpenSearchSecureRestTestCase extends OpenSearchRestTestCas
         }
     }
 
-    protected static void configureClient(JunoRestClientBuilder builder, Settings settings) throws IOException {
-        String userName = System.getProperty("user");
-        String password = System.getProperty("password");
-        if (userName != null && password != null) {
-            builder.setHttpClientConfigCallback(
-                    httpClientBuilder -> {
-                        JunoRestClient.configureHttpRequestHeaders(httpClientBuilder);
-                        BasicCredentialsProvider credentialsProvider = new BasicCredentialsProvider();
-                        credentialsProvider.setCredentials(
-                                new AuthScope(null, -1), new UsernamePasswordCredentials(userName, password));
-                        return httpClientBuilder.setDefaultCredentialsProvider(credentialsProvider);
-                    });
-        }
-        openSearchRestTestCaseConfigureClient(builder, settings);
-    }
     /**
      * wipeAllIndices won't work since it cannot delete security index. Use deleteExternalIndices instead.
      */
