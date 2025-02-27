@@ -207,6 +207,12 @@ integTest {
     systemProperty "https", System.getProperty("https")
     systemProperty "user", System.getProperty("user")
     systemProperty "password", System.getProperty("password")
+    systemProperty 'aws.region', System.getProperty('aws.region')
+    systemProperty 'aws.service', System.getProperty('aws.service')
+    systemProperty 'collection.host', System.getProperty('collection.host')
+    systemProperty 'model.embedding', System.getProperty('model.embedding')
+    systemProperty 'vector.dimension', System.getProperty('vector.dimension') ?: "1024"
+    systemProperty 'model.sparse', System.getProperty('model.sparse')
 
     doFirst {
         // Tell the test JVM if the cluster JVM is running under a debugger so that tests can
@@ -277,9 +283,6 @@ task integTestRemote(type: RestIntegTestTask) {
     systemProperty 'cluster.number_of_nodes', "${_numNodes}"
 
     systemProperty 'tests.security.manager', 'false'
-    //systemProperty "aws.accessKeyId", System.getProperty("aws.accessKeyId")
-    //systemProperty "aws.secretAccessKey", System.getProperty("aws.secretAccessKey")
-    //systemProperty 'aoss', 'false'
 
     // Run tests with remote cluster only if rest case is defined
     if (System.getProperty("tests.rest.cluster") != null) {
@@ -295,18 +298,21 @@ task integTestAOSS(type: RestIntegTestTask) {
     classpath = sourceSets.test.runtimeClasspath
 
     systemProperty "https", System.getProperty("https")
-    // systemProperty "user", System.getProperty("user")
-    // systemProperty "password", System.getProperty("password")
-    systemProperty "aws.accessKeyId", System.getProperty("aws.accessKeyId")
-    systemProperty "aws.secretAccessKey", System.getProperty("aws.secretAccessKey")
+    systemProperty "user", System.getProperty("user")
+    systemProperty "password", System.getProperty("password")
+    systemProperty 'aws.region', System.getProperty('aws.region')
+    systemProperty 'aws.service', System.getProperty('aws.service')
+    systemProperty 'collection.host', System.getProperty('collection.host')
+    systemProperty 'model.embedding', System.getProperty('model.embedding')
+    systemProperty 'vector.dimension', System.getProperty('vector.dimension') ?: "1024"
+    systemProperty 'model.sparse', System.getProperty('model.sparse')
 
     systemProperty 'cluster.number_of_nodes', "${_numNodes}"
 
     systemProperty 'tests.security.manager', 'false'
-    systemProperty 'aoss', 'true'
 
     // Run tests with remote cluster only if rest case is defined
-    if (System.getProperty("tests.rest.cluster") != null) {
+    if (System.getProperty("collection.host") != null) {
         filter {
             includeTestsMatching "org.opensearch.neuralsearch.*CloudNativeIT"
         }
